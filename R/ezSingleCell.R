@@ -1,4 +1,4 @@
-#' ezSeurat: Interactive single-cell data analysis using the Seurat pipeline
+#' ezSingleCell: Interactive single-cell data analysis using the Seurat pipeline
 #' 
 #' This package was made to provide a GUI for carrying out single cell data analysis on Seurat, as 
 #' opposed to running the entire pipeline from the command line. Analysis using the package starts after alignment
@@ -22,7 +22,7 @@
 #' 
 #' PCA 
 #'   PCA will be run on identified variable genes, and users can visualise 2D plots of selected PCs.
-#'   This can provide better visualisation of any outliers.
+#'   This can provide better visualisation of any outliers. After PCA is done, users can search for clusters.
 #'   
 #' Diagnostic analysis of PCs with Jackstraw and Elbow plots
 #'   Seurat's tSNE clustering outcomes are notably dependent on the PCs used, so users should take time to 
@@ -30,7 +30,7 @@
 #' 
 #' tSNE dimension reduction
 #'   tSNE will collapse the chosen PCs into lower dimensions and provide additional visualisation of clustering
-#'   of cell populations. 
+#'   of cell populations.
 #' 
 #' Differentially Expressed Gene (DEG) analysis
 #'   Users can identify differentially expressed genes across groups, either as a one-vs-all comparison, or a
@@ -42,7 +42,7 @@
 #' @author Matthew Myint
 #' @references placeholder
 #' @docType package
-#' @name ezSeurat-package
+#' @name ezSingleCell-package
 #' 
 NULL
 
@@ -55,9 +55,9 @@ NULL
 #' @author Matthew Myint
 #' @export
 #' @examples
-#' ezSeurat()
+#' ezSingleCell()
 
-ezSeurat <- function(){
-  appDir <- system.file('shiny', package = "ezSeurat")
+ezSingleCell <- function(){
+  appDir <- system.file('shiny', package = "ezSingleCell")
   shiny::runApp(appDir, display.mode = "normal")
 }

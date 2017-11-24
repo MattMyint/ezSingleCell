@@ -1,7 +1,7 @@
-ezSeurat: Interactive single-cell data analysis via the Seurat pipeline
+ezSingleCell: Interactive single-cell data analysis via the Seurat pipeline
 ============
 
-**NOTE**: <u>This is the development version of ezSeurat</u>
+**NOTE**: <u>This is the development version of ezSingleCell</u>
 
 ### ezSeurat
 
@@ -13,20 +13,20 @@ This package was designed to allow analysis to be done with easier changing of v
 As this is an R package, it is assumed you have R installed. However, do ensure that you're using the latest version.
 It is also recommended to run R via RStudio.
 
-To install ezSeurat:
+To install ezSingleCell:
 
 ``` r
 library("devtools")
-install_github("MattMyint/ezSeurat")
+install_github("MattMyint/ezSingleCell")
 ```
 
 ### Usage
 
-After successfully installing ezSeurat, run the following:
+After successfully installing ezSingleCell, run the following:
 
 ``` r
-library("ezSeurat")
-ezSeurat()
+library("ezSingleCell")
+ezSingleCell()
 ```
 
 ### Acknowledgements

@@ -5,7 +5,7 @@ require(Matrix)
 require(plotly)
 
 shinyUI(fluidPage(
-    titlePanel("Seurat analysis of scRNAseq data"),
+    titlePanel("ezSingleCell: Seurat analysis of scRNAseq data"),
     hr(),
 
     fluidRow(
@@ -70,7 +70,7 @@ shinyUI(fluidPage(
                                   actionButton("PDFc", "Download Variable Genes Plot in PDF", icon = icon("download"))
                  ),
                  conditionalPanel(" input.Pca == 'P_panel1' && input.tabs == 'PCA' ",
-                                  actionButton("PDFd", "Download PCA Plot in PDF", icon = icon("download"))
+                                  actionButton("PDFd", "Download PCA Plot(PDF) and co-ordinates", icon = icon("download"))
                  ),
                  conditionalPanel(" input.Pca == 'P_panel2' && input.tabs == 'PCA' ",
                                   actionButton("PDFe", "Download Viz Plot in PDF", icon = icon("download"))
@@ -85,10 +85,19 @@ shinyUI(fluidPage(
                                   actionButton("PDFh", "Download Elbow Plot in PDF", icon = icon("download"))
                  ),
                  conditionalPanel(" input.tabs == 'TSNE' ",
-                                  actionButton("PDFi", "Download TSNE Plot in PDF", icon = icon("download"))
+                                  actionButton("PDFi", "Download TSNE Plot(PDF) and co-ordinates", icon = icon("download"))
                  ),
                  conditionalPanel(" input.tabs == 'DEGs' ",
                                   actionButton("PDFj", "Download DEG results", icon = icon("download"))
+                 ),
+                 ## ensure no spill over in button text
+                 tags$head(
+                   tags$style(HTML('
+                                   .btn {
+                                   white-space: normal;
+                                   }'
+                                )
+                   )
                  ),
                  ## Conditional is separate from pdf options
                  hr(),
@@ -110,9 +119,10 @@ shinyUI(fluidPage(
                actionButton("saveButton", "Save Data", icon = icon("hand-o-right")),
                
                hr(),
-               div(style = "margin-top: 30px; width: 200px; ", HTML("Developed by")),
-               div(style = "margin-top: 10px; ",
-                   HTML("<img style='width: 150px;' src='http://archild.sign.a-star.edu.sg/images/logo.png'>"))
+               h4(tags$a(href="mailto:a0124008@u.nus.edu,
+                         Chen_Jinmiao@immunol.a-star.edu.sg?subject=[ezSingleCell-question]", 
+                         "Contact Us")),
+               imageOutput("logo", height = "60px")
         ),
         ##------Main area---------
         column(9,
@@ -168,20 +178,22 @@ shinyUI(fluidPage(
                                          tabPanel(title="Plot", value="P_panel1",
                                                   br(),
                                                   fluidRow(
-                                                    column(4,
+                                                    column(2,
                                                            actionButton("doPCA", "Run PCA", icon = icon("hand-pointer-o"))
                                                     ),
-                                                    column(4,
+                                                    column(5,
                                                            numericInput("x.pc",
                                                                         label = "X-axis PC to use",
-                                                                        value = 1)
-                                                    ),
-                                                    column(4,
+                                                                        value = 1),
                                                            numericInput("y.pc",
                                                                         label = "Y-axis PC to use",
                                                                         value = 2)
+                                                    ),
+                                                    column(5,
+                                                           uiOutput("clustUI")
+                                                           
                                                     )),
-                                                  plotlyOutput("PCAPlot", width = "100%")
+                                                  uiOutput("pca_plotspace")
                                          ),
                                          tabPanel(title="Viz", value="P_panel2",
                                                   br(),
@@ -208,9 +220,13 @@ shinyUI(fluidPage(
                              tabsetPanel(id="diag",
                                          tabPanel(title="JackStraw", value="D_panel1",
                                                   br(),
+                                                  actionButton("doJack", label = "Plot Jackstraw"),
+                                                  br(),
                                                   plotOutput("Jackstraw", width = "100%")
                                          ),
                                          tabPanel(title="Elbow", value="D_panel2",
+                                                  br(),
+                                                  actionButton("doElbow", label = "Get Elbow Plot"),
                                                   br(),
                                                   plotOutput("Elbow", width = "100%")
 
@@ -233,10 +249,13 @@ shinyUI(fluidPage(
                                                    min = 100)
                                ),
                                column(4,
+                                      br(),
                                       actionButton("doTsne", "Run TSNE", icon = icon("hand-pointer-o")),
+                                      textOutput("Tsne.done"),
+                                      br(),
                                       actionButton("doTsnePlot", "Update TSNE plot", icon = icon("hand-pointer-o"))
+                                      
                                )),
-                             textOutput("Tsne.done"),
                              plotlyOutput("Tsne.plot", width = "100%")
                            )),
                            ##------DEGs---------

@@ -1,8 +1,8 @@
-Package: ezSeurat
+Package: ezSingleCell
 Type: Package
 Title: Interactive single-cell data analysis via the Seurat pipeline
-Version: 0.0.0.9000
-Date: 2017-09-27
+Version: 0.0.1
+Date: 2017-11-24
 Authors@R: person("Matthew", "Myint", email = "a0124008@u.nus.edu ", role = c("aut", "cre"))
 Description: User friendly GUI implementation of Seurat analysis pipeline, from input of expression sparse matrices to DEG analysis.
     This package was designed to allow analysis to be done with easier changing of visualisation parameters.

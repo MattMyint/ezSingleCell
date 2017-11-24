@@ -1,13 +1,15 @@
 ## max data size
 options(shiny.maxRequestSize = 1024^10)
 options(shiny.launch.browser = T)
-options(shiny.reactlog = TRUE)
 
 shinyServer(function(input, output, session) {
-    v <- reactiveValues(scData = NULL, isPCAdone = FALSE)
+    v <- reactiveValues(scData = NULL,
+                        isPCAdone = NULL,
+                        isTSNEdone = NULL,
+                        isClusterdone = NULL)
     celltypes <- NULL
     prePlot <- function(){
-      if(names(dev.cur()) != "null device"){
+      while(names(dev.cur()) != "null device"){
         dev.off()
       }
     }
@@ -59,14 +61,19 @@ shinyServer(function(input, output, session) {
                 filename <- paste0(resultDir, .Platform$file.sep, v$scData@project.name, "_", Sys.Date())
                 sObj <- v$scData
                 save(sObj, file= paste0(resultDir, .Platform$file.sep, sObj@project.name, "_", Sys.Date(), ".Robj"))
-                #put if test for tsne being done
-                write.csv(v$scData@tsne.rot, file = paste0(filename, "_tsne.csv"))
-                write.csv(v$scData@ident, file = paste0(filename, "_cluster.csv"))
             })
           ## open the results directory
           opendir(resultDir)
         }
     })
+    
+    output$logo <- renderImage({
+      return(list(
+        src = "inst/extdata/logo.png",
+        contentType = "image/png",
+        alt = "Singapore Immunology Network"
+      ))
+    }, deleteFile = FALSE)
     
     opendir <- function(dir = getwd()){
       if (.Platform['OS.type'] == "windows"){
@@ -246,6 +253,41 @@ shinyServer(function(input, output, session) {
         v$isPCAdone <- TRUE
       })
     })
+    
+    output$clustUI <- renderUI({
+      if(is.null(v$isPCAdone)){
+        return(NULL)
+      }else{
+        tagList(
+          numericInput("clus.res",
+                       label = "Cluster Resolution",
+                       value = 0.6,
+                       min = 0.1,
+                       step = 0.1),
+          br(),
+          actionButton("findCluster", "Find Clusters", icon = icon("hand-pointer-o")),
+          textOutput("cluster.done")
+        )
+      }
+    })
+    
+    observeEvent(input$findCluster, {
+      withProgress(message = "Finding clusters...", value = 0.3, {
+        v$scData <- FindClusters(v$scData, reduction.type = "pca", dims.use = 1:input$dim.used, 
+                                 resolution = input$clus.res, print.output = 0, save.SNN = TRUE)
+        output$cluster.done <- renderText(paste0("Clustering done!"))
+        v$isClusterdone <- TRUE
+      })
+    })
+    
+    output$pca_plotspace <- renderUI({
+      if(is.null(v$isPCAdone)){
+        return(NULL)
+      }else{
+        plotlyOutput("PCAPlot", width = "100%")
+      }
+    })
+    
     observeEvent(input$Pca == "P_panel1", {
       pcaPlotInput <- function(){
         if(is.null(v$scData) || !v$isPCAdone){
@@ -281,6 +323,36 @@ shinyServer(function(input, output, session) {
                 height=as.numeric(input$pdf_h))
             PCAPlot(v$scData, dim.1 = input$x.pc, dim.2 = input$y.pc, pt.size = 2)
             dev.off()
+          })
+          withProgress(message="Downloading PCA coordinates...", value=0.5, {
+            print(getwd())
+            pdfDir <- paste0(getwd(), .Platform$file.sep, "Seurat_results/Generated_reports_", Sys.Date())
+            if(!dir.exists(pdfDir)){
+              dir.create(pdfDir)
+            }
+            filename2 <- paste0(pdfDir, .Platform$file.sep,"pca_", Sys.Date(), ".txt")
+            i = 0
+            while(file.exists(filename2)){
+              filename2 <- paste0(pdfDir, .Platform$file.sep,
+                                  "pca_",
+                                  Sys.Date(), "_", sprintf("%03d", i + 1), ".txt");
+              i = i + 1;
+            }
+            write.table(v$scData@dr$pca@cell.embeddings, file = filename2)
+          })
+          withProgress(message="Downloading cluster IDs...", value=0.9, {
+            print(getwd())
+            pdfDir <- paste0(getwd(), .Platform$file.sep, "Seurat_results/Generated_reports_", Sys.Date())
+            if(!dir.exists(pdfDir)){
+              dir.create(pdfDir)
+            }
+            filename2 <- paste0(pdfDir, .Platform$file.sep,"cluster_", Sys.Date(), ".txt")
+            i = 0
+            while(file.exists(filename2)){
+              filename2 <- paste0(pdfDir, .Platform$file.sep,"cluster_", Sys.Date(), "_", sprintf("%03d", i + 1), ".txt");
+              i = i + 1;
+            }
+            write.table(v$scData@ident, file = filename2)
           })
         }
       })
@@ -372,7 +444,7 @@ shinyServer(function(input, output, session) {
     ##---------------Significant PCs tabset-------------------
     
     # Jackstraw
-    observeEvent(input$diag == "D_panel1", { #put under control of run button again
+    observeEvent(input$doJack, { #put under control of run button again
       JackInput <- function(){
         if(is.null(v$scData)){
           return(NULL)
@@ -412,7 +484,7 @@ shinyServer(function(input, output, session) {
     })
     
     # Elbow
-    observeEvent(input$diag == "D_panel2", {
+    observeEvent(input$doElbow, {
       ElbowInput <- function(){
         if(is.null(v$scData)){
           return(NULL)
@@ -452,8 +524,11 @@ shinyServer(function(input, output, session) {
     
     ##---------------TSNE tabset-------------------
     observeEvent(input$doTsne, {
-      v$scData <- RunTSNE(v$scData, dims.use = 1:input$dim.used, max_iter = input$max.iter, do.fast = TRUE)
-      output$Tsne.done <- renderText(paste0("TSNE done!"))
+      withProgress(message = "Running tSNE...", value = 0.3, {
+        v$scData <- RunTSNE(v$scData, dims.use = 1:input$dim.used, max_iter = input$max.iter, do.fast = TRUE)
+        output$Tsne.done <- renderText(paste0("TSNE done!"))
+        v$isTSNEdone <- TRUE
+      })
     })
     
     observeEvent(input$doTsnePlot, {
@@ -489,6 +564,20 @@ shinyServer(function(input, output, session) {
                 height=as.numeric(input$pdf_h))
             TSNEPlot(v$scData, pt.size = 2)
             dev.off()
+          })
+          withProgress(message="Downloading tSNE coordinates...", value=0.6, {
+            print(getwd())
+            pdfDir <- paste0(getwd(), .Platform$file.sep, "Seurat_results/Generated_reports_", Sys.Date())
+            if(!dir.exists(pdfDir)){
+              dir.create(pdfDir)
+            }
+            filename2 <- paste0(pdfDir, .Platform$file.sep,"tsne_", Sys.Date(), ".txt")
+            i = 0
+            while(file.exists(filename2)){
+              filename2 <- paste0(pdfDir, .Platform$file.sep,"tsne_", Sys.Date(), "_", sprintf("%03d", i + 1), ".txt");
+              i = i + 1;
+            }
+            write.table(v$scData@dr$tsne@cell.embeddings, file = filename2)
           })
         }
       })
