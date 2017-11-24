@@ -1,12 +1,14 @@
 ezSingleCell: Interactive single-cell data analysis via the Seurat pipeline
 ============
 
-**NOTE**: <u>This is the development version of ezSingleCell</u>
+**NOTE**: <u>The version hosted here has been deprecated and the development version is hosted at https://github.com/JinmiaoChenLab/ezSingleCell</u>
 
-### ezSeurat
+### ezSingleCell
 
-User friendly GUI implementation of Seurat analysis pipeline, from input of expression sparse matrices to DEG analysis.
+Formerly known as ezSeurat, this package provides a user friendly GUI implementation of Seurat analysis pipeline,
+from input of expression sparse matrices to DEG analysis.
 This package was designed to allow analysis to be done with easier changing of visualisation parameters.
+
 
 ### Installation
 
@@ -17,7 +19,7 @@ To install ezSingleCell:
 
 ``` r
 library("devtools")
-install_github("MattMyint/ezSingleCell")
+install_github("JinmiaoChenLab/ezSingleCell")
 ```
 
 ### Usage
